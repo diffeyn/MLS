@@ -7,6 +7,7 @@ from datetime import datetime
 
 def set_up_driver():
     options = webdriver.ChromeOptions()
+    options
     driver = webdriver.Chrome(options=options)
     return driver
 
