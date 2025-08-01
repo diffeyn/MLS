@@ -7,7 +7,9 @@ from datetime import datetime
 
 def set_up_driver():
     options = webdriver.ChromeOptions()
-    options
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox') 
+    options.add_argument('--disable-dev-shm-usage')
     driver = webdriver.Chrome(options=options)
     return driver
 
@@ -64,7 +66,7 @@ def extract_teams():
 
 df, hrefs, date = extract_teams()
 
-df.to_csv(f'teams_{date}', index=False)
+df.to_csv(f'data/scraping/teams_{date}', index=False)
 with open('hrefs.txt', 'w') as f:
     for href in hrefs:
         f.write(href + '\n')

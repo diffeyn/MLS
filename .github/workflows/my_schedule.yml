@@ -23,10 +23,25 @@ jobs:
         with:
           python-version: '3.13.5'
 
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Execute Python script
-        run: src/scrape.py 
+        run: python src/scrape.py 
+
+      - name: Commit and push if it changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: Scraped new MLS data"
+          # Tell it to only look for changes in the data folder
+          file_pattern: data/scraping/*
