@@ -73,12 +73,18 @@ def extact_teams_and_href(driver):
 def extract_teams():
     driver = set_up_driver()
     go_to_page('https://sofifa.com/teams?type=all&lg%5B0%5D=39&showCol%5B%5D=ti&showCol%5B%5D=fm&showCol%5B%5D=oa&showCol%5B%5D=at&showCol%5B%5D=md&showCol%5B%5D=df&showCol%5B%5D=cw&showCol%5B%5D=ps', driver)
+    print("PAGE TITLE:", driver.title)
+    print("URL:", driver.current_url)
     df, hrefs, date = extact_teams_and_href(driver)
     
     return df, hrefs, date
 
 
 df, hrefs, date = extract_teams()
+
+print(f"Scraped {len(df)} rows with {len(hrefs)} hrefs for date: {date}")
+print("DataFrame preview:")
+print(df.head())
 
 df.to_csv(f'data/scraping/teams_{date}', index=False)
 with open('hrefs.txt', 'w') as f:
