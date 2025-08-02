@@ -30,7 +30,7 @@ def extact_teams_and_href(driver):
     team_headers = []
     hrefs = []
     try:
-        table = driver.find_element(By.TAG_NAME, 'table')
+        table = driver.find_element(By.XPATH, '//*[@id="body"]/main/article/table')
         header_elements = table.find_elements(By.TAG_NAME, "th")
         for header in header_elements:
             team_headers.append(header.text.strip())
