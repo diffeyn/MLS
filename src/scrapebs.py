@@ -19,6 +19,9 @@ table = soup.find('table')
 if table is None:
     raise ValueError("No table found in the scraped HTML.")
 
+print("Scraped title:", soup.title.text)
+print("First 500 chars:\n", response.text[:500])
+
 rows = table.find_all('tr')
 if not rows or not rows[0].find_all('th'):
     raise ValueError("No header row found in the table.")
