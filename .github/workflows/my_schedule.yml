@@ -46,7 +46,7 @@ jobs:
       - name: Execute Python script
         env:
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
-        run: python src/scrape.py 
+        run: python src/scrapebs.py 
 
       # Step 6: Commit the new data files back to your repository.
       - name: Commit and push if it changed
