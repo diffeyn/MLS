@@ -1,13 +1,5 @@
 MLS (Major League Soccer) scraping and predictions.
 
-Directory:
-
-Data
-  Data Scraping
-    Scraping_script
-  Data
-    {Data CSV files}
-Modeling
-  
+This project includes a historical scrape of MLS teams, their stats and players as well.
 
 
