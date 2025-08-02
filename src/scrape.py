@@ -11,20 +11,21 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import undetected_chromedriver as uc
 
 def set_up_driver():
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    options = uc.ChromeOptions()
     options.add_argument('--no-sandbox') 
     options.add_argument('--disable-dev-shm-usage')
     service = ChromeService(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service = service, options=options)
+    driver = uc.Chrome(headless=True, service = service, options=options)
     return driver
 
 
 def go_to_page(url, driver):
     try:
         driver.get(url)
+        print('go to page')
     except Exception as e:
         print('could not go to page', e)
     return driver
@@ -34,6 +35,7 @@ def extact_teams_and_href(driver):
     teams = []
     team_headers = []
     hrefs = []
+    date = None
     try:
         table = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="body"]/main/article/table'))
