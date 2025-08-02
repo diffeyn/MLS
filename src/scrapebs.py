@@ -10,7 +10,7 @@ if not API_KEY:
     raise ValueError("SCRAPER_API_KEY environment variable not set.")
 
 target_url = "https://sofifa.com/teams?type=all&lg%5B0%5D=39&showCol%5B%5D=ti&showCol%5B%5D=fm&showCol%5B%5D=oa&showCol%5B%5D=at&showCol%5B%5D=md&showCol%5B%5D=df&showCol%5B%5D=cw&showCol%5B%5D=ps"
-scraper_url = f"http://api.scraperapi.com/?api_key={API_KEY}&url={target_url}"
+scraper_url = f"http://api.scraperapi.com/?api_key={API_KEY}&url={target_url}&render=true"
 
 response = requests.get(scraper_url)
 soup = BeautifulSoup(response.text, 'html.parser')
