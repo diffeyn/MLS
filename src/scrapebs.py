@@ -15,12 +15,12 @@ scraper_url = f"http://api.scraperapi.com/?api_key={API_KEY}&url={target_url}"
 response = requests.get(scraper_url)
 soup = BeautifulSoup(response.text, 'html.parser')
 
+print("Scraped title:", soup.title.text)
+print("First 500 chars:\n", response.text[:500])
+
 table = soup.find('table')
 if table is None:
     raise ValueError("No table found in the scraped HTML.")
-
-print("Scraped title:", soup.title.text)
-print("First 500 chars:\n", response.text[:500])
 
 rows = table.find_all('tr')
 if not rows or not rows[0].find_all('th'):
