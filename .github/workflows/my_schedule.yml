@@ -34,10 +34,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Make script executable
+        run: chmod +x scrape.py
+
+      - name: Run script directly
+        run: ./scrape.py
       # Step 5: Execute your script using the Python interpreter.
       # This is the line that was causing the error. It is now correct.
       - name: Execute Python script
-        run: python src/scrape.py 
+        run: python scrape.py 
 
       # Step 6: Commit the new data files back to your repository.
       - name: Commit and push if it changed
