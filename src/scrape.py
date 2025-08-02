@@ -9,6 +9,8 @@ from selenium.webdriver.support.ui import Select
 from datetime import datetime
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def set_up_driver():
     options = webdriver.ChromeOptions()
@@ -30,7 +32,9 @@ def extact_teams_and_href(driver):
     team_headers = []
     hrefs = []
     try:
-        table = driver.find_element(By.XPATH, '//*[@id="body"]/main/article/table')
+        table = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="body"]/main/article/table'))
+            )
         header_elements = table.find_elements(By.TAG_NAME, "th")
         for header in header_elements:
             team_headers.append(header.text.strip())
