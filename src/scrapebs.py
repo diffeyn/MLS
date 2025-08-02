@@ -37,5 +37,5 @@ for row in rows[1:]:
 df = pd.DataFrame(data, columns=headers)
 
 date = datetime.now().strftime("%Y-%m-%d")
-df.to_csv(f'data/scraping/teams_{date}', index=False)
+df.to_csv(f'data/scraping/teams_{date}.csv', index=False)
 
