@@ -23,7 +23,10 @@ def set_up_driver():
 
 
 def go_to_page(url, driver):
-    driver.get(url)
+    try:
+        driver.get(url)
+    except Exception as e:
+        print('could not go to page', e)
     return driver
 
 
