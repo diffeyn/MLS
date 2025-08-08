@@ -4,19 +4,15 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-API_KEY = os.getenv("SCRAPER_API_KEY")
+payload = {
+  "api_key": "UpJrdQ6h7q3wvGPVbsaK9OwISr2ZzcPYw5R9KOrQ8G0CUJ7qNBrkPnvRwmErsvyiWeWQzLMkiaCiZtUgHK",
+  "url": "https://sofifa.com/teams?type=all&lg%5B0%5D=39&showCol%5B%5D=ti&showCol%5B%5D=fm&showCol%5B%5D=oa&showCol%5B%5D=at&showCol%5B%5D=md&showCol%5B%5D=df&showCol%5B%5D=cw&showCol%5B%5D=ps",
+}
 
-if not API_KEY:
-    raise ValueError("SCRAPER_API_KEY environment variable not set.")
-
-target_url = "https://sofifa.com/teams?type=all&lg%5B0%5D=39&showCol%5B%5D=ti&showCol%5B%5D=fm&showCol%5B%5D=oa&showCol%5B%5D=at&showCol%5B%5D=md&showCol%5B%5D=df&showCol%5B%5D=cw&showCol%5B%5D=ps"
-scraper_url = f"http://api.scraperapi.com/?api_key={API_KEY}&url={target_url}&render=true"
-
-response = requests.get(scraper_url)
+response = requests.get("https://scraping.narf.ai/api/v1/", params=payload)
 soup = BeautifulSoup(response.text, 'html.parser')
 
-print("Scraped title:", soup.title.text)
-print("First 500 chars:\n", response.text[:500])
+
 
 table = soup.find('table')
 if table is None:
@@ -36,6 +32,13 @@ for row in rows[1:]:
 
 df = pd.DataFrame(data, columns=headers)
 
-date = datetime.now().strftime("%Y-%m-%d")
+date = soup.find('select', {'name': 'roster'})
+if date:
+    date = date.find('option', selected=True).text.strip()
+    safe_date = date.replace("/", "-").replace(":", "-").strip()
+else:
+    date = datetime.now().strftime("%Y-%m-%d")
+
+
 df.to_csv(f'data/scraping/teams_{date}.csv', index=False)
 
