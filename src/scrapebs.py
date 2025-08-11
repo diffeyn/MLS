@@ -40,5 +40,5 @@ else:
     date = datetime.now().strftime("%Y-%m-%d")
 
 
-df.to_csv(f'data/scraping/teams_{date}.csv', index=False)
+df.to_csv(f'data/scraping/teams/teams_{date}.csv', index=False)
 
