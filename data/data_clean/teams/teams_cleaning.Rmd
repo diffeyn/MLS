@@ -1,0 +1,70 @@
+---
+title: "PreProcess team data"
+author: "Nathan Diffey"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r initialize sample data, echo=FALSE}
+player_data = read.csv('G:/My Drive/GitHubProjects/MLS/data/scraping/teams/teams_Aug 20, 2024.csv')
+```
+
+```{r view data}
+head(player_data)
+```
+
+```{r clean_sample_data, message=FALSE}
+player_data2 = player_data %>%
+  select(-1, -ncol(.)) %>%
+  rename(team_name = Name, team_id = ID, team_formation = Formation, overall_score = Overall, attack = Attack, midfield = Midfield, defense = Defence, worth_euro = any_of(c('Club worth', 'Club.worth')), num_players = Players) %>%
+  separate(team_formation, into = c('lineup', 'style', 'trash2'), sep = ' ') %>%
+  mutate(team_name = str_remove(team_name, 'Major League Soccer')) %>%
+  mutate(worth_euro = str_remove(worth_euro, '€')) %>%
+  mutate(worth_euro = str_remove_all(worth_euro, 'M')) %>%
+  column_to_rownames('team_id') %>%
+  mutate_at(vars(overall_score:num_players), as.numeric) %>%
+  select(-trash2)
+
+
+```
+
+
+```{r view_sample_data2}
+head(player_data2)
+```
+
+```{r clean_data_function, echo=FALSE}
+clean_teams = function(df){
+  df2 = df %>%
+  select(-1, -ncol(.)) %>%
+  rename(team_name = Name, team_id = ID, team_formation = Formation, overall_score = Overall, attack = Attack, midfield = Midfield, defense = Defence, worth_euro = any_of(c('Club worth', 'Club.worth')), num_players = Players) %>%
+  separate(team_formation, into = c('lineup', 'style', 'trash2'), sep = ' ') %>%
+  mutate(team_name = str_remove(team_name, 'Major League Soccer')) %>%
+  mutate(worth_euro = str_remove(worth_euro, '€')) %>%
+  mutate(worth_euro = str_remove_all(worth_euro, 'M')) %>%
+  column_to_rownames('team_id') %>%
+  mutate_at(vars(overall_score:num_players), as.numeric) %>%
+  select(-trash2)
+  return(df2)
+}
+```
+
+```{r apply_clean_function, echo=FALSE}
+
+
+csv_files = list.files(path = 'G:/My Drive/GitHubProjects/MLS/data/scraping/teams', '\\.csv$', full.names = TRUE)
+
+
+for (file in csv_files){
+  df = read.csv(file)
+  cleaned = clean_teams(df)
+  date_str <- str_remove(file, "teams_|\\.xlsx$")
+  date = mdy(date_str)
+  write.csv(cleaned, paste0('G:/My Drive/GitHubProjects/MLS/data/data_clean/teams/teams_', date, '.csv'))
+}
+```
