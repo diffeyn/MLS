@@ -53,4 +53,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Automated: Scraped new MLS data"
-          file_pattern: data/github_actions/*
+          file_pattern: data/github_actions/**
