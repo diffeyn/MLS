@@ -4,10 +4,13 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+
+api_key = os.getenv("SCRAPER_API_KEY")
+
 def get_soup(url):
     ### API Payload for teams scraping
     payload = {
-        "api_key": "jorXNk0XeOjcNxNdmsBHa9YXUKSwnSgMFChONEcLZh4UVsc12swTZjUE2rgfKdEgb1L7KEdEs84IhmobWb",
+        "api_key": api_key,
         "url": url,
     }
 

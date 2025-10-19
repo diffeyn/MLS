@@ -45,7 +45,7 @@ jobs:
       # This is the line that was causing the error. It is now correct.
       - name: Execute Python script
         env:
-          SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
+          SECRET_API_KEY: ${{ secrets.SECRET_API_KEY }}
         run: python src/scrapemls.py 
 
       # Step 6: Commit the new data files back to your repository.
