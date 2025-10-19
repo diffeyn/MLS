@@ -1,10 +1,6 @@
-import pandas as pd
+from pathlib import Path
 import re
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
@@ -160,4 +156,8 @@ def scrape_cards(group, driver):
     """, group)
     
 def save_to_csv(df, filename):
-    df.to_csv(f'data/github_actions/{filename}', index=False)
+    base = Path("data/github_actions")
+    base.mkdir(parents=True, exist_ok=True)  # create folder if needed
+    path = base / filename
+    df.to_csv(path, index=False)
+    print(f"✅ Saved {path.resolve()} ({path.stat().st_size} bytes)")

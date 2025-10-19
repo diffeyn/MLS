@@ -5,6 +5,7 @@ import selenium_scraper as sscraper
 import utils as utils
 import datetime
 
+
 sofifa_url = 'https://sofifa.com/teams?type=all&lg%5B%5D=39'
 
 def scrape_sofifa(sofifa_url):
