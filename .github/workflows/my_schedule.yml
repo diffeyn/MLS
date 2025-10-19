@@ -25,7 +25,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       # Step 3: Set up the Chrome browser for Selenium to use.
       - name: Set up Chrome
@@ -46,7 +46,7 @@ jobs:
       - name: Execute Python script
         env:
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
-        run: python src/scrapebs.py 
+        run: python src/scrapemls.py 
 
       # Step 6: Commit the new data files back to your repository.
       - name: Commit and push if it changed

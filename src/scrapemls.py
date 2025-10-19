@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import bs_scraper as bscraper
 import selenium_scraper as sscraper
 import utils as utils
