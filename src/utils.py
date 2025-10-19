@@ -160,4 +160,4 @@ def scrape_cards(group, driver):
     """, group)
     
 def save_to_csv(df, filename):
-    df.to_csv(filename, index=False)
+    df.to_csv(f'data/github_actions/{filename}', index=False)
