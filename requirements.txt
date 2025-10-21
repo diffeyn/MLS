@@ -5,4 +5,3 @@ urllib3
 beautifulsoup4
 selenium
 webdriver_manager
-hashlib
