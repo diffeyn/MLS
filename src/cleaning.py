@@ -31,6 +31,7 @@ def clean_feed(df):
 
 def clean_players(df):
     df = df.rename(columns={
+        'match_id': 'match_id',
         'Player': 'player_name',
         'Mins': 'minutes',
         'G' : 'goals',
