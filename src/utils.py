@@ -157,7 +157,6 @@ def scrape_cards(group, driver):
     
 def save_to_csv(df, filename):
     base = Path("data/github_actions")
-    base.mkdir(parents=True, exist_ok=True)  # create folder if needed
     path = base / filename
     df.to_csv(path, index=False)
     print(f"✅ Saved {path.resolve()} ({path.stat().st_size} bytes)")
