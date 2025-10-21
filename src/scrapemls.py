@@ -1,48 +1,44 @@
-#!/usr/bin/env python3
+import os
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
 
-import bs_scraper as bscraper
-import selenium_scraper as sscraper
-import utils as utils
-import datetime
-import cleaning as cleaning
+payload = {
+  "api_key": "UpJrdQ6h7q3wvGPVbsaK9OwISr2ZzcPYw5R9KOrQ8G0CUJ7qNBrkPnvRwmErsvyiWeWQzLMkiaCiZtUgHK",
+  "url": "https://sofifa.com/teams?type=all&lg%5B0%5D=39&showCol%5B%5D=ti&showCol%5B%5D=fm&showCol%5B%5D=oa&showCol%5B%5D=at&showCol%5B%5D=md&showCol%5B%5D=df&showCol%5B%5D=cw&showCol%5B%5D=ps",
+}
 
-
-sofifa_url = 'https://sofifa.com/teams?type=all&lg%5B%5D=39'
-
-def scrape_sofifa(sofifa_url):
-    soup = bscraper.get_soup(sofifa_url)
-    teams_df, team_links = bscraper.scrape_team_table(soup)
-    players_df = bscraper.extract_players(team_links)
-    return teams_df, players_df
-
-mls_url = 'https://www.mlssoccer.com/schedule/scores#competition=MLS-COM-000001&club=all'
-
-def scrape_mls(mls_url):
-    driver = sscraper.set_up_driver()
-    links = sscraper.extract_match_links(driver, mls_url)
-    latest_stats, latest_player_stats, latest_feed = sscraper.extract_match_data(links, driver)
-    
-    return latest_stats, latest_player_stats, latest_feed
+response = requests.get("https://scraping.narf.ai/api/v1/", params=payload)
+soup = BeautifulSoup(response.text, 'html.parser')
 
 
-latest_teams, latest_players = scrape_sofifa(sofifa_url)
-latest_stats, latest_player_stats, latest_feed = scrape_mls(mls_url)
 
-today = datetime.date.today()
+table = soup.find('table')
+if table is None:
+    raise ValueError("No table found in the scraped HTML.")
 
-latest_feed = cleaning.clean_feed(latest_feed)
-latest_players = cleaning.clean_players(latest_players)
-latest_teams = cleaning.clean_teams(latest_teams)
-latest_stats = cleaning.clean_match_stats(latest_stats)
-latest_stats = cleaning.reframe_stats(latest_stats)
-latest_player_stats = cleaning.clean_player_stats(latest_player_stats)
+rows = table.find_all('tr')
+if not rows or not rows[0].find_all('th'):
+    raise ValueError("No header row found in the table.")
 
-latest_stats = cleaning.replace_match_id_with_hash(latest_stats)
-latest_player_stats = cleaning.replace_match_id_with_hash(latest_player_stats)
-latest_feed = cleaning.replace_match_id_with_hash(latest_feed)
+data = []
+headers = [th.get_text(strip=True) for th in rows[0].find_all('th')]
 
-utils.save_to_csv(latest_teams, f'teams/latest_teams_{today}.csv')
-utils.save_to_csv(latest_players, f'players/latest_players_{today}.csv')
-utils.save_to_csv(latest_stats, f'stats/latest_stats_{today}.csv')
-utils.save_to_csv(latest_player_stats, f'player_stats/latest_player_stats_{today}.csv')
-utils.save_to_csv(latest_feed, f'feed/latest_feed_{today}.csv')
+for row in rows[1:]:
+    cols = [td.get_text(strip=True) for td in row.find_all('td')]
+    if cols:
+        data.append(cols)
+
+df = pd.DataFrame(data, columns=headers)
+
+date = soup.find('select', {'name': 'roster'})
+if date:
+    date = date.find('option', selected=True).text.strip()
+    safe_date = date.replace("/", "-").replace(":", "-").strip()
+else:
+    date = datetime.now().strftime("%Y-%m-%d")
+
+
+df.to_csv(f'data/scraping/teams/teams_{date}.csv', index=False)
+
