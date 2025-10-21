@@ -53,7 +53,10 @@ def clean_players(df):
         'RC' : 'red_card'
     })
     
-    df = df[['match_id'] + [col for col in df.columns if col != 'match_id']]
+    if 'match_id' in df.columns:
+        df = df[['match_id'] + [c for c in df.columns if c != 'match_id']]
+    else:
+        print("No match_id column found. Columns are:", df.columns.tolist())    
     
     return df
 
