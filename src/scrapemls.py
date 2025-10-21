@@ -37,9 +37,9 @@ latest_stats = cleaning.clean_match_stats(latest_stats)
 latest_stats = cleaning.reframe_stats(latest_stats)
 latest_player_stats = cleaning.clean_player_stats(latest_player_stats)
 
-latest_stats = cleaning.replace_match_id_with_hash(latest_stats)
-latest_player_stats = cleaning.replace_match_id_with_hash(latest_player_stats)
-latest_feed = cleaning.replace_match_id_with_hash(latest_feed)
+latest_stats = cleaning.hash_match_ids(latest_stats)
+latest_player_stats = cleaning.hash_match_ids(latest_player_stats)
+latest_feed = cleaning.hash_match_ids(latest_feed)
 
 utils.save_to_csv(latest_teams, f'teams/latest_teams_{today}.csv')
 utils.save_to_csv(latest_players, f'players/latest_players_{today}.csv')
