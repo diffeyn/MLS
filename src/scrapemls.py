@@ -30,12 +30,12 @@ latest_stats, latest_player_stats, latest_feed = scrape_mls(mls_url)
 
 today = datetime.date.today()
 
-latest_feed = cleaning.clean_feed(latest_feed)
-latest_players = cleaning.clean_players(latest_players)
+latest_players = cleaning.clean_player_stats(latest_players)
 latest_teams = cleaning.clean_teams(latest_teams)
-latest_stats = cleaning.clean_match_stats(latest_stats)
+latest_feed = cleaning.clean_feed(latest_feed)
+latest_stats = cleaning.clean_teams_stats(latest_stats)
 latest_stats = cleaning.reframe_stats(latest_stats)
-latest_player_stats = cleaning.clean_player_stats(latest_player_stats)
+latest_player_stats = cleaning.clean_players(latest_player_stats)
 
 latest_stats = cleaning.hash_match_ids(latest_stats)
 latest_player_stats = cleaning.hash_match_ids(latest_player_stats)
