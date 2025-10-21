@@ -1,5 +1,9 @@
 import pandas as pd
 import re 
+import hashlib
+from pathlib import Path
+from datetime import datetime
+import hashlib
 
 ##3 clean feed
 
@@ -257,3 +261,103 @@ def reframe_stats(df):
     wide = wide.drop(columns=['date_away'])
     wide.columns = [c.replace(' ', '_').replace('%', 'pct').replace('-', '_').lower() for c in wide.columns]
     return wide
+
+
+
+TYPE_PREFIXES = ("player_stats_", "simple_stats_", "players_", "stats_", "feed_", "reframed_stats_")
+
+MLS_CODES = {
+    "atl","chi","cin","clb","col","dal","dcu","hou","kcw","lag","laf","mcf","mia","min","mon","nsh",
+    "ner","nyc","nyr","orl","phi","por","rsl","sea","sje","stl","tor","van","aus","cha"
+}
+
+def _strip_cleaned_and_prefixes(stem: str) -> tuple[str, str]:
+    s = stem.lower()
+    if s.startswith("cleaned_"):
+        s = s[len("cleaned_"):]
+    detected = None
+    for pref in TYPE_PREFIXES:
+        if s.startswith(pref):
+            detected = pref.rstrip("_")
+            s = s[len(pref):]
+            break
+    return detected or "unknown", s
+
+def _extract_date_chunk(name: str) -> tuple[str, str]:
+    for pat in [r"(\d{4})[^\d]?(\d{1,2})[^\d]?(\d{1,2})",   # YYYY-MM-DD
+                r"(\d{1,2})[^\d]?(\d{1,2})[^\d]?(\d{4})"]:  # MM-DD-YYYY
+        m = re.search(pat, name)
+        if not m:
+            continue
+        g = tuple(int(x) for x in m.groups())
+        try:
+            if len(str(g[0])) == 4:
+                dt = datetime(g[0], g[1], g[2])
+            else:
+                dt = datetime(g[2], g[0], g[1])
+            yyyymmdd = dt.strftime("%Y%m%d")
+            remainder = name[:m.start()] + name[m.end():]
+            return yyyymmdd, remainder
+        except ValueError:
+            pass
+    return "00000000", name
+
+def _extract_teams(remainder: str) -> tuple[str, str]:
+
+    m = re.search(r"([a-z]{3})[ _\-]*v?s?[ _\-]*([a-z]{3})", remainder)
+    if m:
+        t1, t2 = m.group(1), m.group(2)
+        return t1, t2
+
+    letters = re.sub(r"[^a-z]", "", remainder)
+    if len(letters) >= 6:
+        t1, t2 = letters[:3], letters[3:6]
+        if MLS_CODES and (t1 not in MLS_CODES or t2 not in MLS_CODES):
+            found = [letters[i:i+3] for i in range(0, len(letters)-2, 3)]
+            valid = [c for c in found if c in MLS_CODES]
+            if len(valid) >= 2:
+                return valid[0], valid[1]
+        return t1, t2
+
+    return "unk", "unk"
+
+def canonical_key_from_stem(stem: str) -> tuple[str, str, str, str]:
+    dtype, remainder = _strip_cleaned_and_prefixes(stem)
+    yyyymmdd, leftover = _extract_date_chunk(remainder)
+    home, away = _extract_teams(leftover)
+    return dtype, home, away, yyyymmdd
+
+def make_match_id(key: str, length: int = 10) -> str:
+    return "match_" + hashlib.md5(key.encode("utf-8")).hexdigest()[:length]
+
+def attach_match_id(df: pd.DataFrame, file_path: Path) -> tuple[pd.DataFrame, str, str, str]:
+    stem = file_path.stem
+    dtype, home, away, yyyymmdd = canonical_key_from_stem(stem)
+    canonical_key = f"{home}_{away}_{yyyymmdd}"
+    match_id = make_match_id(canonical_key)
+    out = df.copy()
+    out["canonical_key"] = canonical_key
+    out["match_id"] = match_id
+    return out, dtype, canonical_key, match_id
+
+def save_with_match_id(df: pd.DataFrame, dtype: str, match_id: str, repo_root: Path) -> Path:
+
+    out_dir = repo_root / "data" / "clean" / "w_match_id" / dtype
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"cleaned_{dtype}_{match_id}.csv"
+    df.to_csv(out_path, index=False)
+    print(f"✔ wrote {out_path}  rows={len(df)}")
+    return out_path
+
+def replace_match_id_with_hash(df: pd.DataFrame, col: str = "match_id") -> pd.DataFrame:
+    out = df.copy()
+
+    def make_hash(val: str) -> str:
+        if not isinstance(val, str) or not val:
+            return "match_00000000"
+        val = re.sub(r"[^a-z0-9]", "", val.lower())
+        return "match_" + hashlib.md5(val.encode("utf-8")).hexdigest()[:8]
+
+    out["match_id_hash"] = out[col].apply(make_hash)
+    out = out.drop(columns=[col])
+    return out
