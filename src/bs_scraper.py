@@ -50,10 +50,12 @@ def scrape_team_table(soup):
         teams_df['date'] = date
         
     team_links = []
+    
+    for td in teams_table.find_all('td', class_='s20'):
+        a = td.find('a', href=True)
+        if a:
+            team_links.append(a['href'])
 
-    for a in teams_table.find_all('a', href=True):
-        team_links.append(a['href'])
-            
     return teams_df, team_links
     
     
