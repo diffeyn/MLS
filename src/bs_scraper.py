@@ -97,4 +97,5 @@ def extract_players(team_links):
         date = datetime.now().strftime("%Y-%m-%d")
         players_df['date'] = date
     
+    print(f'colnames: {players_df.columns.tolist()}')
     return players_df
