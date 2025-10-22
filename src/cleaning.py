@@ -141,8 +141,8 @@ def clean_player_stats(df):
     df[['position', 'jersey_num', 'contract_start',
         'contract_end']] = df.loc[:, 'Team & Contract'].astype(str).str.extract(pat)
 
-    df.loc[:, 'height_cm'] = df['Height'].astype(str).str.split('cm / ').str[0].astype('Int64')
-    df.loc[:, 'weight_kg'] = df['Weight'].astype(str).str.split('kg / ').str[0].astype('Int64')
+    df.loc[:, 'height_cm'] = df['Height'].astype(str).str.split('cm ').str[0].astype('Int64')
+    df.loc[:, 'weight_kg'] = df['Weight'].astype(str).str.split('kg ').str[0].astype('Int64')
 
     df.loc[:, 'wage_eur'] = df['Wage'].astype(str).str.replace('€', '').str.replace(
         ',', '').str.replace('K', '000').str.replace('M',
