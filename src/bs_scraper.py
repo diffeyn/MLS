@@ -64,6 +64,8 @@ def extract_players(team_links):
     for link in team_links:
         team_url = f"https://sofifa.com{link}"
         
+        print(f"Scraping players from: {team_url}")
+        
         soup = get_soup(team_url)
         
         ### Parse HTML for players table
