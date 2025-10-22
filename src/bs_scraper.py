@@ -54,7 +54,7 @@ def scrape_team_table(soup):
     for a in teams_table.find_all('a', href=True):
         team_links.append(a['href'])
             
-        return teams_df, team_links
+    return teams_df, team_links
     
     
 
@@ -63,9 +63,7 @@ def extract_players(team_links):
 
     for link in team_links:
         team_url = f"https://sofifa.com{link}"
-        
-        print(f"Scraping players from: {team_url}")
-        
+                
         soup = get_soup(team_url)
         
         ### Parse HTML for players table
@@ -100,4 +98,5 @@ def extract_players(team_links):
         players_df['date'] = date
     
     print(f'colnames: {players_df.columns.tolist()}')
+    
     return players_df
