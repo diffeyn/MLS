@@ -29,23 +29,23 @@ def scrape_mls(mls_url):
 
 
 latest_teams, latest_players = scrape_sofifa(sofifa_url)
-latest_stats, latest_player_stats, latest_feed = scrape_mls(mls_url)
+latest_team_stats, latest_player_stats, latest_feed = scrape_mls(mls_url)
 
 today = datetime.date.today()
 
 latest_players = cleaning.clean_players(latest_players)
 latest_teams = cleaning.clean_teams(latest_teams)
 latest_feed = cleaning.clean_feed(latest_feed)
-latest_stats = cleaning.clean_teams_stats(latest_stats)
-latest_stats = cleaning.reframe_stats(latest_stats)
+latest_team_stats = cleaning.clean_teams_stats(latest_team_stats)
+latest_team_stats = cleaning.reframe_stats(latest_team_stats)
 latest_player_stats = cleaning.clean_player_stats(latest_player_stats)
 
-latest_stats = cleaning.hash_match_ids(latest_stats)
+latest_team_stats = cleaning.hash_match_ids(latest_team_stats)
 latest_player_stats = cleaning.hash_match_ids(latest_player_stats)
 latest_feed = cleaning.hash_match_ids(latest_feed)
 
 utils.save_to_csv(latest_teams, f'teams/latest_teams_{today}.csv')
 utils.save_to_csv(latest_players, f'players/latest_players_{today}.csv')
-utils.save_to_csv(latest_stats, f'stats/latest_stats_{today}.csv')
+utils.save_to_csv(latest_team_stats, f'stats/latest_team_stats_{today}.csv')
 utils.save_to_csv(latest_player_stats, f'player_stats/latest_player_stats_{today}.csv')
 utils.save_to_csv(latest_feed, f'feed/latest_feed_{today}.csv')

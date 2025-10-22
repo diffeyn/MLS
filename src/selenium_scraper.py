@@ -394,6 +394,24 @@ def extract_stats(driver, link, match_id):
     all_stats['match_id'] = match_id
     return all_stats, player_stats_df
 
+def add_match_id(obj, match_id):
+    if obj is None:
+        df = pd.DataFrame()
+    elif isinstance(obj, pd.DataFrame):
+        df = obj.copy()
+    else:
+        df = pd.DataFrame(obj)
+
+    if df.empty:
+        return pd.DataFrame({'match_id': [match_id]})
+
+    if 'match_id' not in df.columns:
+        # put it in column 0 so it's easy to eyeball
+        df.insert(0, 'match_id', match_id)
+
+    return df
+
+
 def extract_match_data(links, driver):
 
     latest_stats = []
@@ -409,10 +427,12 @@ def extract_match_data(links, driver):
         match_id = link.rstrip('/').split('/')[-1].split('?')[0]
 
         feed = extract_feed(driver, link, match_id)
-
+        feed = add_match_id(feed, match_id)
         feed = pd.DataFrame(feed)
 
         stats, player_stats = extract_stats(driver, link, match_id)
+        stats = add_match_id(stats, match_id)
+        player_stats = add_match_id(player_stats, match_id)
 
         latest_stats.append(stats)
         latest_player_stats.append(player_stats)
@@ -424,4 +444,8 @@ def extract_match_data(links, driver):
     driver.quit()
 
     return latest_stats_df, latest_player_stats_df, latest_feed_df
+
+import pandas as pd
+
+
 
