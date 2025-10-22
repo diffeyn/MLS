@@ -3,6 +3,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup 
 from datetime import datetime
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+
 
 
 api_key = os.getenv("SECRET_API_KEY")
@@ -58,14 +60,27 @@ def scrape_team_table(soup):
 
     return teams_df, team_links
     
-    
+
+COLS = [
+    "pi","ae","hi","wi","pf","oa","bo","bp","vl","wg","ta","cr","fi","he","sh","vo","ts",
+    "dr","cu","fr","lo","bl","to","ac","sp","ag","re","ba","tp","so","ju","st","ln","te",
+    "ar","in","po","vi","pe","cm","td","ma","sa","sl","tg","gd","gh","gc","gp","gr"
+]
+
+def add_columns_to_url(u: str, cols) -> str:
+    pu = urlparse(u)
+    pairs = parse_qsl(pu.query, keep_blank_values=True)
+    pairs += [("showCol[]", c) for c in cols]
+    return urlunparse(pu._replace(query=urlencode(pairs, doseq=True)))
 
 def extract_players(team_links):
     all_players = []
 
     for link in team_links:
         team_url = f"https://sofifa.com{link}"
-                
+        
+        team_url = add_columns_to_url(team_url, COLS)
+        
         soup = get_soup(team_url)
         
         ### Parse HTML for players table
