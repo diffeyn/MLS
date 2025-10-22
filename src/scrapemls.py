@@ -5,6 +5,7 @@ import selenium_scraper as sscraper
 import utils as utils
 import datetime
 import cleaning as cleaning
+import pandas as pd
 
 
 sofifa_url = 'https://sofifa.com/teams?type=all&lg%5B%5D=39'
@@ -12,7 +13,14 @@ sofifa_url = 'https://sofifa.com/teams?type=all&lg%5B%5D=39'
 def scrape_sofifa(sofifa_url):
     soup = bscraper.get_soup(sofifa_url)
     teams_df, team_links = bscraper.scrape_team_table(soup)
-    players_df = bscraper.extract_players(team_links)
+    
+    players = []
+    for link in team_links:
+        players = bscraper.extract_players(link)
+        players.extend(players)
+        
+    players_df = pd.DataFrame(players)
+        
     return teams_df, players_df
 
 mls_url = 'https://www.mlssoccer.com/schedule/scores#competition=MLS-COM-000001&club=all'
