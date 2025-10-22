@@ -50,8 +50,7 @@ jobs:
 
       # Step 6: Commit the new data files back to your repository.
       - name: Commit and push if it changed
-        uses: actions/upload-artifact@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          name: mls-scrape-results
           commit_message: "Automated: Scraped new MLS data"
-          file_pattern: data/github_actions/**
+          file_pattern: data/github_actions/**/*.csv
