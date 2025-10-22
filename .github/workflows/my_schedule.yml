@@ -47,12 +47,6 @@ jobs:
           SECRET_API_KEY: ${{ secrets.SECRET_API_KEY }}
         run: python src/scrapemls.py 
 
-      - name: What does git see?
-        run: |
-          git ls-files --others --exclude-standard | sed -n '1,200p'
-          git status --porcelain=v1
-
-
       # Step 6: Commit the new data files back to your repository.
       - name: Commit and push if it changed
         uses: stefanzweifel/git-auto-commit-action@v5

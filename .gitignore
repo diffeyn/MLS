@@ -1,5 +1,5 @@
 *.csv
 *.xlsx
-!data/github_actions/**
-
+!data/github_actions/**/*
+!data/github_actions/
 
