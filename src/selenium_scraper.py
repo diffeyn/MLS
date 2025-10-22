@@ -406,7 +406,6 @@ def add_match_id(obj, match_id):
         return pd.DataFrame({'match_id': [match_id]})
 
     if 'match_id' not in df.columns:
-        # put it in column 0 so it's easy to eyeball
         df.insert(0, 'match_id', match_id)
 
     return df
@@ -428,7 +427,6 @@ def extract_match_data(links, driver):
 
         feed = extract_feed(driver, link, match_id)
         feed = add_match_id(feed, match_id)
-        feed = pd.DataFrame(feed)
 
         stats, player_stats = extract_stats(driver, link, match_id)
         stats = add_match_id(stats, match_id)
@@ -437,10 +435,10 @@ def extract_match_data(links, driver):
         latest_stats.append(stats)
         latest_player_stats.append(player_stats)
         latest_feed.append(feed)
-        
-        latest_stats_df = pd.concat(latest_stats, axis=0, ignore_index=True) if latest_stats else pd.DataFrame()
-        latest_player_stats_df = pd.concat(latest_player_stats, axis=0, ignore_index=True) if latest_player_stats else pd.DataFrame()
-        latest_feed_df = pd.concat(latest_feed, axis=0, ignore_index=True) if latest_feed else pd.DataFrame()
+
+        latest_stats_df = pd.concat(latest_stats, axis=0, ignore_index=True) if latest_stats else pd.DataFrame(columns=['match_id'])
+        latest_player_stats_df = pd.concat(latest_player_stats, axis=0, ignore_index=True) if latest_player_stats else pd.DataFrame(columns=['match_id'])
+        latest_feed_df = pd.concat(latest_feed, axis=0, ignore_index=True) if latest_feed else pd.DataFrame(columns=['match_id'])
     driver.quit()
 
     return latest_stats_df, latest_player_stats_df, latest_feed_df
