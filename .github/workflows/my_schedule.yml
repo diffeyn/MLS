@@ -47,6 +47,23 @@ jobs:
           SECRET_API_KEY: ${{ secrets.SECRET_API_KEY }}
         run: python src/scrapemls.py 
 
+      - name: Where am I and what branch is this?
+        run: |
+          echo "SHA: $GITHUB_SHA"
+          echo "REF: $GITHUB_REF"
+          echo "HEAD branch: $(git rev-parse --abbrev-ref HEAD)"
+          pwd
+
+      - name: Show files and git’s opinion
+        run: |
+          ls -R data/github_actions || true
+          echo "--- untracked ---"
+          git ls-files --others --exclude-standard | sed -n '1,200p'
+          echo "--- ignored (first 50) ---"
+          git check-ignore -v data/github_actions/** | sed -n '1,50p' || true
+          echo "--- status ---"
+          git status --porcelain=v1
+
       # Step 6: Commit the new data files back to your repository.
       - name: Commit and push if it changed
         uses: stefanzweifel/git-auto-commit-action@v5
