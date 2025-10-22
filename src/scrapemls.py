@@ -33,12 +33,12 @@ mls_latest_team_stats, mls_latest_player_stats, mls_latest_feed = scrape_mls(mls
 
 today = datetime.date.today()
 
-sofifa_players_df = cleaning.clean_players(sofifa_players_df)
+sofifa_players_df = cleaning.clean_player_stats(sofifa_players_df)
 sofifa_teams_df = cleaning.clean_teams(sofifa_teams_df)
 mls_latest_feed = cleaning.clean_feed(mls_latest_feed)
 mls_latest_team_stats = cleaning.clean_teams_stats(mls_latest_team_stats)
 mls_latest_team_stats = cleaning.reframe_stats(mls_latest_team_stats)
-mls_latest_player_stats = cleaning.clean_player_stats(mls_latest_player_stats)
+mls_latest_player_stats = cleaning.clean_players(mls_latest_player_stats)
 
 mls_latest_team_stats = cleaning.hash_match_ids(mls_latest_team_stats)
 mls_latest_player_stats = cleaning.hash_match_ids(mls_latest_player_stats)
