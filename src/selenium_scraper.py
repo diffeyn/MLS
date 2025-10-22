@@ -443,7 +443,5 @@ def extract_match_data(links, driver):
 
     return latest_stats_df, latest_player_stats_df, latest_feed_df
 
-import pandas as pd
-
 
 
