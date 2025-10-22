@@ -231,6 +231,8 @@ def reframe_stats(df):
 
     # regex: match 'cleaned_stats_' + home + 'vs' + away + '-' + date + '.csv'
     m = re.match(r"cleaned_stats_([a-z]{2,4})vs([a-z]{2,4})-(\d{2}-\d{2}-\d{4})\.csv", fname, re.I)
+    
+    df = df.copy()
 
     if m:
         home, away, date_str = m.groups()
