@@ -226,45 +226,43 @@ def clean_teams_stats(df):
 
 ### reframe stats
 
-def reframe_stats(df):
-    fname = df.attrs.get('source_filename', '')
+def reframe_stats(df, fname: str | None = None):
+    if fname is None:
+        fname = str(df.attrs.get('source_filename', '') or '')
 
-    # regex: match 'cleaned_stats_' + home + 'vs' + away + '-' + date + '.csv'
-    m = re.match(r"cleaned_stats_([a-z]{2,4})vs([a-z]{2,4})-(\d{2}-\d{2}-\d{4})\.csv", fname, re.I)
-    
     df = df.copy()
+    m = re.search(r'([a-z]{3})[ _-]*v?s[ _-]*([a-z]{3}).*?(\d{2}-\d{2}-\d{4})', fname, re.I)
 
+    parts = []
     if m:
         home, away, date_str = m.groups()
         home, away = home.upper(), away.upper()
         date = pd.to_datetime(date_str, format="%m-%d-%Y")
+        parts.append(pd.DataFrame({'home_value': [home], 'away_value': [away], 'stat': ['teams']}))
+        parts.append(pd.DataFrame({'home_value': [date], 'away_value': [date], 'stat': ['date']}))
 
-        # add rows with stat = date and team = teams
-        add_df = pd.DataFrame({
-            'home_value': [home],
-            'away_value': [away],
-            'stat': 'teams'
-        })
-        
-        new_row = pd.DataFrame({
-            'home_value': [date],
-            'away_value': [date],
-            'stat': 'date'
-        })
+    if parts:
+        df = pd.concat([df, *parts], ignore_index=True)
 
-    df = pd.concat([df, add_df], ignore_index=True)
+    need = {'stat', 'home_value', 'away_value'}
+    missing = need - set(df.columns)
+    if missing:
+        raise KeyError(f"reframe_stats expected {need}; missing {missing}. Got: {list(df.columns)[:10]}")
 
-    df = pd.concat([df, new_row], ignore_index=True)
     out = {}
     for _, row in df.iterrows():
         out[f"{row['stat']}_home"] = row['home_value']
         out[f"{row['stat']}_away"] = row['away_value']
 
     wide = pd.DataFrame([out])
-    wide= wide.drop(columns=['date_home'])
-    wide['match_date'] = wide['date_away']
-    wide = wide.drop(columns=['date_away'])
-    wide.columns = [c.replace(' ', '_').replace('%', 'pct').replace('-', '_').lower() for c in wide.columns]
+    if 'date_away' in wide.columns:
+        wide = wide.drop(columns=['date_away'])
+    wide = wide.rename(columns={'date_home': 'match_date'})
+    wide.columns = (pd.Index(wide.columns)
+                    .str.replace(' ', '_')
+                    .str.replace('%', 'pct')
+                    .str.replace('-', '_')
+                    .str.lower())
     return wide
 
 
