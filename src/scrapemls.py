@@ -14,13 +14,8 @@ def scrape_sofifa(sofifa_url):
     soup = bscraper.get_soup(sofifa_url)
     teams_df, team_links = bscraper.scrape_team_table(soup)
     
-    players = []
-    for link in team_links:
-        players = bscraper.extract_players(link)
-        players.extend(players)
-        
-    players_df = pd.DataFrame(players)
-        
+    players_df = bscraper.extract_players(team_links)
+
     return teams_df, players_df
 
 mls_url = 'https://www.mlssoccer.com/schedule/scores#competition=MLS-COM-000001&club=all'
