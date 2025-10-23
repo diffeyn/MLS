@@ -83,6 +83,8 @@ def extract_players(team_links):
         
         soup = get_soup(team_url)
         
+        team = soup.find('h1').get_text()
+        
         ### Parse HTML for players table
         players_table = soup.find('table')
         if players_table is None:
@@ -113,7 +115,7 @@ def extract_players(team_links):
     else:
         date = datetime.now().strftime("%Y-%m-%d")
         players_df['date'] = date
-    
-    print(f'colnames: {players_df.columns.tolist()}')
-    
+
+    players_df['team'] = team
+
     return players_df
