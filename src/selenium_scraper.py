@@ -401,10 +401,12 @@ def add_match_id(obj, match_id):
     df = obj.copy() if isinstance(obj, pd.DataFrame) else pd.DataFrame(obj)
 
     if df.empty:
-        df = pd.DataFrame({'match_id': [match_id]})
-    else:
-        df.insert(0, 'match_id', match_id)
+        return pd.DataFrame({'match_id': [match_id]})
 
+    if 'match_id' in df.columns:
+        return df
+
+    df.insert(0, 'match_id', match_id)
     return df
 
 
