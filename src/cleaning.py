@@ -283,6 +283,6 @@ def hash_match_ids(df: pd.DataFrame, col="match_id", out_col="match_id_hash", le
         .map(lambda x: hashlib.md5(x.encode()).hexdigest()[:length])
     )
     
-    df.drop['match_id']
+    df = df.drop(columns=['match_id'], errors='ignore')
     
     return df
