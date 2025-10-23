@@ -263,15 +263,15 @@ def reframe_stats(df, fname: str | None = None):
                     .str.replace('%', 'pct')
                     .str.replace('-', '_')
                     .str.lower())
+    
+    if 'match_id' in df.columns:                
+        wide.insert(0, 'match_id', df['match_id'].iloc[0])  
+        
     return wide
 
 
 
 def hash_match_ids(df: pd.DataFrame, col="match_id", out_col="match_id_hash", length=8):
-    """
-    Add a hashed column based on existing match_id values.
-    Uses MD5, takes first `length` characters.
-    """
     if col not in df.columns:
         raise KeyError(f"Column '{col}' not found.")
     
