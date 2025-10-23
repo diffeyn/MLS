@@ -220,7 +220,7 @@ def clean_teams_stats(df):
     df.loc[mask, "away_value"] = a_pct.values
     df.loc[mask, "stat"] = "possession_" + df.loc[mask, "tip_id"].str.replace("-", "_", regex=False)
     df = df.drop(columns=['tip_id', 'home_possession', 'away_possession'])
-    df = df[['stat', 'home_value', 'away_value']]
+    df = df[['match_id', 'stat', 'home_value', 'away_value']]
     return df
 
 

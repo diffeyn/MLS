@@ -429,6 +429,8 @@ def extract_match_data(links, driver):
         feed = add_match_id(feed, match_id)
 
         stats, player_stats = extract_stats(driver, link, match_id)
+        
+        
         stats = add_match_id(stats, match_id)
         player_stats = add_match_id(player_stats, match_id)
 
