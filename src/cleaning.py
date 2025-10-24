@@ -16,9 +16,7 @@ def clean_feed(df):
     df = df[~df['comment'].str.contains('Lineups', na=False)]
 
     df = df[~df['title'].str.contains('KICK OFF|HALF TIME|FULL TIME|END OF SECOND HALF', na=False)]
-    
-    df = df[df['minute'].notna()]
-    
+        
     df = df.iloc[::-1].reset_index(drop=True)
     
     return df
