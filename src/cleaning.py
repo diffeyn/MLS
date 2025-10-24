@@ -1,15 +1,11 @@
 import pandas as pd
 import re 
 import hashlib
-from pathlib import Path
-from datetime import datetime
 
 ##3 clean feed
 
 def clean_feed(df):
     df = df.copy()
-
-    df = df.dropna(subset=['minute', 'title', 'comment'], how='all')
     
     df['title'] = df.apply(lambda x: 'Corner' if pd.notna(x['comment']) and 'corner' in x['comment'].lower() else x['title'], axis=1)
 
