@@ -18,6 +18,8 @@ def clean_feed(df):
     df = df[~df['title'].str.contains('KICK OFF|HALF TIME|FULL TIME|END OF SECOND HALF', na=False)]
         
     df = df.iloc[::-1].reset_index(drop=True)
+        
+    df.insert(0, 'event_id', range(1, len(df) + 1))
     
     return df
 
