@@ -156,7 +156,6 @@ def scrape_cards(group, driver):
     """, group)
     
 def save_to_csv(df, filename):
-    base = Path("data/github_actions")
-    base.mkdir(parents=True, exist_ok=True)
-    path = base / filename
+    path = Path("data/github_actions") / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(path, index=False)
