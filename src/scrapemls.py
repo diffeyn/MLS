@@ -40,9 +40,6 @@ mls_latest_team_stats = cleaning.clean_teams_stats(mls_latest_team_stats)
 mls_latest_team_stats = cleaning.reframe_stats(mls_latest_team_stats)
 mls_latest_player_stats = cleaning.clean_players(mls_latest_player_stats)
 
-mls_latest_team_stats = cleaning.hash_match_ids(mls_latest_team_stats)
-mls_latest_player_stats = cleaning.hash_match_ids(mls_latest_player_stats)
-mls_latest_feed = cleaning.hash_match_ids(mls_latest_feed)
 
 utils.save_to_csv(sofifa_teams_df, f'teams/latest_teams_{today}.csv')
 utils.save_to_csv(sofifa_players_df, f'players/latest_players_{today}.csv')

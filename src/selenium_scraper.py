@@ -1,3 +1,4 @@
+import hashlib
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -60,6 +61,8 @@ def extract_match_links(driver, url):
         previous_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Previous results']"))) # Locate the "Previous results" button
 
         previous_button.click() # Click the button to get to last week's matches
+        
+        previous_button.click() # Click again to go further back if needed
 
         time.sleep(5)
         
@@ -421,8 +424,9 @@ def extract_match_data(links, driver):
                 or str(link).strip() == '' or str(link).strip().lower() == 'nan'):
             print(f"[skip] bad link: {link!r}")
             continue
-
-        match_id = link.rstrip('/').split('/')[-1].split('?')[0]
+        
+        raw_id = link.rstrip('/').split('/')[-1].split('?')[0]
+        match_id = hashlib.md5(raw_id.encode()).hexdigest()[:8]
 
         feed = extract_feed(driver, link, match_id)
         feed = add_match_id(feed, match_id)
