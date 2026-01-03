@@ -4,7 +4,7 @@ import bs_scraper as bscraper
 import selenium_scraper as sscraper
 import utils as utils
 import datetime
-from clean_feed import clean_feed
+import cleaning
 import pandas as pd
 
 

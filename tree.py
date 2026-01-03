@@ -1,1 +1,0 @@
-tree /F | Select-String -NotMatch "\.git|\.csv$"
