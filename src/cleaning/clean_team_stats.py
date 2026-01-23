@@ -2,6 +2,32 @@ import pandas as pd
 
 
 def clean_teams_stats(df):
+    """
+    Clean and transform team statistics data from wide to long format.
+    This function processes team statistics by:
+    1. Mapping time period codes (bar_0, bar_1, etc.) to their minute ranges (0-5, 6-10, etc.)
+    2. Combining category and stat_name into a single stat column
+    3. Extracting possession percentages for time-based statistics
+    4. Removing unnecessary columns and standardizing the output format
+    Args:
+        df (pd.DataFrame): DataFrame containing team statistics with columns:
+            - match_id: Unique identifier for the match
+            - category: Category of the statistic
+            - stat_name: Name of the specific statistic
+            - tip_id: Time period identifier (e.g., 'bar_0', '0-5')
+            - home_possession: Home team possession data
+            - away_possession: Away team possession data
+            - home_value: Home team statistic value
+            - away_value: Away team statistic value
+            - home_advantage: Home advantage indicator (dropped)
+            - away_advantage: Away advantage indicator (dropped)
+    Returns:
+        pd.DataFrame: Cleaned DataFrame with columns:
+            - match_id: Match identifier
+            - stat: Combined statistic name (e.g., 'possession_0_5')
+            - home_value: Home team value for the statistic
+            - away_value: Away team value for the statistic
+    """
     bar_dict = {
         '0-5': 'bar_0',
         '6-10': 'bar_1',

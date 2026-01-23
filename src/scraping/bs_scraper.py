@@ -10,7 +10,6 @@ from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 api_key = os.getenv("SECRET_API_KEY")
 
 def get_soup(url):
-    ### API Payload for teams scraping
     payload = {
         "api_key": api_key,
         "url": url,
@@ -22,7 +21,6 @@ def get_soup(url):
 
 
 def scrape_team_table(soup):
-    ### Parse HTML for teams table
     teams_table = soup.find('table')
     if teams_table is None:
         raise ValueError("No table found in the scraped HTML.")
@@ -74,6 +72,29 @@ def add_columns_to_url(u: str, cols) -> str:
     return urlunparse(pu._replace(query=urlencode(pairs, doseq=True)))
 
 def extract_players(team_links):
+    """
+    Extracts player data from multiple team pages on SoFIFA.
+    This function iterates through a list of team links, scrapes each team's roster page,
+    and extracts player information from the HTML tables. The extracted data is compiled
+    into a pandas DataFrame with additional metadata (team name and date).
+    Args:
+        team_links (list): A list of relative URL paths to team pages on SoFIFA
+                          (e.g., ['/team/123', '/team/456']).
+    Returns:
+        pd.DataFrame: A DataFrame containing player data with columns corresponding to
+                      the table headers from SoFIFA, plus additional columns:
+                      - 'date': The roster date from the page or current date if not found
+                      - 'team': The team name extracted from the page
+    Notes:
+        - Uses helper functions: add_columns_to_url(), get_soup()
+        - Expects a global variable COLS for URL column parameters
+        - Prints warnings if tables or headers are not found for specific URLs
+        - The date is sanitized by replacing "/" and ":" with "-"
+        - All players from all teams are combined into a single DataFrame
+    Raises:
+        May raise exceptions from pandas, requests, or BeautifulSoup operations
+        if network requests fail or HTML parsing encounters unexpected structures.
+    """
     all_players = []
 
     for link in team_links:
@@ -85,7 +106,6 @@ def extract_players(team_links):
         
         team = soup.find('h1').get_text()
         
-        ### Parse HTML for players table
         players_table = soup.find('table')
         if players_table is None:
             print(f"No table found for team URL: {team_url}")
@@ -103,10 +123,8 @@ def extract_players(team_links):
                 player_data = dict(zip(headers, cols))
                 all_players.append(player_data)
 
-    ### Convert to DataFrame
     players_df = pd.DataFrame(all_players)
 
-    ## add safe_date column
     date = soup.find('select', {'name': 'roster'})
     if date:
         date = date.find('option', selected=True).text.strip()

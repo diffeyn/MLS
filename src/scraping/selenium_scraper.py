@@ -81,12 +81,104 @@ def extract_match_links(driver, url):
             
     return list(all_links)
 
+
+###--------------EXTRTACT MATCH ID -----------------###
+
 def create_match_id(link):
-    if link is None or (isinstance(link, float) and math.isnan(link)) or str(link).strip() == '' or str(link).strip().lower() == 'nan':
+    if (
+        link is None
+        or (isinstance(link, float) and math.isnan(link))
+        or str(link).strip() == ''
+        or str(link).strip().lower() == 'nan'
+    ):
         return None
-    return link.rstrip('/').split('/')[-1].split('?')[0]
 
+    return hashlib.md5(
+        link.rstrip('/').split('/')[-1].split('?')[0].encode('utf-8')
+    ).hexdigest()[:8]
+    
+###--------------HELPER FUNCTIONS FOR STATS-----------------###
 
+def get_player_team_blocks(driver):
+
+    section = driver.find_element(
+        By.CSS_SELECTOR,
+        "div.mls-c-stats.mls-c-stats--match-hub-player-stats"
+    )
+
+    elems = section.find_elements(By.XPATH, "./*")
+
+    teams = []
+    i = 0
+
+    while i < len(elems):
+
+        el = elems[i]
+
+        if "mls-c-stats__club-abbreviation" in el.get_attribute("class"):
+            team = el.text.strip()
+
+            main = None
+            gk = None
+
+            j = i + 1
+            while j < len(elems):
+                if "mls-c-stats__table" in elems[j].get_attribute("class"):
+                    main = elems[j].find_element(By.CSS_SELECTOR, "table")
+                    break
+                j += 1
+
+            j = j + 1
+            while j < len(elems):
+                if "mls-o-match-hub-container__mt-25" in elems[j].get_attribute("class"):
+                    gk = elems[j].find_element(By.CSS_SELECTOR, "table")
+                    break
+                j += 1
+
+            teams.append({
+                "team": team,
+                "main": main,
+                "gk": gk
+            })
+
+            i = j
+        else:
+            i += 1
+
+    return teams
+
+def add_match_id(data, match_id):
+    if isinstance(data, list):
+        return [dict(item, match_id=match_id) for item in data]
+    elif isinstance(data, dict):
+        return dict(data, match_id=match_id)
+    elif hasattr(data, "assign"):  # pandas DataFrame
+        return data.assign(match_id=match_id)
+    else:
+        return data
+    
+    
+def scrape_table(table_el):
+    rows = []
+
+    header_cells = table_el.find_elements(By.CSS_SELECTOR, "thead .mls-o-table__header")
+    headers = [h.text.strip() for h in header_cells]
+
+    for tr in table_el.find_elements(By.CSS_SELECTOR, "tbody .mls-o-table__row"):
+        cells = tr.find_elements(By.CSS_SELECTOR, ".mls-o-table__cell")
+        values = [c.text.strip() for c in cells]
+
+        if len(values) < len(headers):
+            values += [""] * (len(headers) - len(values))
+        elif len(values) > len(headers):
+            values = values[:len(headers)]
+
+        rows.append(dict(zip(headers, values)))
+
+    return rows
+    
+###--------------EXTRACT MATCH DATA-----------------###
+    
 def extract_feed(driver, link, match_id):
     wait = WebDriverWait(driver, 5)
     driver.get(link)
@@ -158,7 +250,103 @@ def extract_feed(driver, link, match_id):
     return feed
 
 
-def extract_stats(driver, link, match_id):
+def extract_player_stats(driver, link, match_id):
+    wait = WebDriverWait(driver, 10)
+
+    driver.get(link)
+    time.sleep(3)
+
+    try:
+        date = driver.find_element(
+            By.XPATH,
+            "//div[contains(@class, 'mls-c-blockheader__subtitle')]"
+        ).text.strip()
+    except:
+        date = None
+
+    try:
+        main_body = driver.find_element(By.TAG_NAME, 'main')
+        stats_bttn = main_body.find_element(By.LINK_TEXT, 'Stats')
+        stats_bttn.click()
+    except Exception as e:
+        print("Error clicking Stats:", e)
+
+    try:
+        player_btn = wait.until(EC.element_to_be_clickable(
+            (By.CSS_SELECTOR, '.mls-o-buttons__segment[value="players"]')
+        ))
+        player_btn.click()
+    except:
+        print("Could not click players button")
+        return pd.DataFrame()
+
+    time.sleep(1)
+    utils.js_scroll_by(driver, 1500)
+    time.sleep(1)
+
+    try:
+        teams = get_player_team_blocks(driver)
+    except Exception as e:
+        print("ERROR grouping team blocks:", e)
+        return pd.DataFrame()
+
+    player_rows = []
+    gk_rows = []
+
+
+    for idx, t in enumerate(teams):
+        side = "home" if idx == 0 else "away"
+
+        # parse main
+        for row in scrape_table(t["main"]):
+            row.update({"side": side, "club": t["team"], "date": date})
+            player_rows.append(row)
+
+        # parse gk
+        for row in scrape_table(t["gk"]):
+            row.update({"side": side, "club": t["team"], "date": date})
+            gk_rows.append(row)
+            
+        # add match_id column
+        player_rows = add_match_id(player_rows, match_id)
+        gk_rows = add_match_id(gk_rows, match_id)
+
+    return pd.DataFrame(player_rows + gk_rows)
+
+
+def extract_team_stats(driver, link, match_id):
+    """
+    Extract team statistics from an MLS match page using Selenium WebDriver.
+    This function navigates to a match statistics page, clicks through the stats section,
+    and scrapes various categories of team performance data including general stats,
+    shooting, passing, possession, and expected goals (xG).
+    Args:
+        driver: Selenium WebDriver instance used for web scraping.
+        link (str): URL of the match page to scrape statistics from.
+        match_id: Unique identifier for the match (can be str or int).
+    Returns:
+        pandas.DataFrame: A DataFrame containing all scraped statistics with columns:
+            - stat_name: Name of the statistic
+            - home_value: Value for the home team
+            - away_value: Value for the away team
+            - category: Category of stat ('general', 'shooting', 'passing', 'possession', 'xg')
+            - match_id: The provided match identifier
+            - date: Date of the match
+            - home_team: Short name of the home team
+            - away_team: Short name of the away team
+    Raises:
+        Exception: Various exceptions may occur during scraping (caught and printed):
+            - Element not found errors
+            - Timeout errors
+            - General scraping errors for each stats category
+    Notes:
+        - Uses explicit waits (WebDriverWait) with 10-second timeout
+        - Scrolls elements into view for proper interaction
+        - Possession stats include tip_id, possession percentages, and advantages
+        - Each stats category is scraped separately with individual error handling
+        - If extraction fails for a particular section, it prints an error and continues
+    """
+    
     wait = WebDriverWait(driver, 10)
     
     driver.get(link)
@@ -168,11 +356,34 @@ def extract_stats(driver, link, match_id):
     passing_stats = []
     possession_stats = []
     xg_stats = []
+    date = ''
+    home_team = ''
+    away_team = ''
     
     main_body = driver.find_element(By.TAG_NAME, 'main')
     stats_bttn = main_body.find_element(By.LINK_TEXT, 'Stats')
+    
+    title_head = driver.find_element(By.CSS_SELECTOR,
+                                     "section.mls-l-module--match-hub-header-container"
+                                     )
+    teams = title_head.find_element(By.CSS_SELECTOR, 'div.mls-c-matchhub-tile')
 
     try:
+        home_team = title_head.find_element(
+            By.CSS_SELECTOR,
+            "div.mls-c-club.--home span.mls-c-club__shortname"
+            ).text.strip()
+
+        away_team = title_head.find_element(
+            By.CSS_SELECTOR,
+            "div.mls-c-club.--away span.mls-c-club__shortname"
+        ).text.strip()
+        
+    except:
+        print("Could not extract team names.")
+
+    try:
+        date = driver.find_element(By.XPATH, "//div[contains(@class, 'mls-c-blockheader__subtitle')]").text.strip()
         stats_bttn.click()
 
         try:
@@ -318,99 +529,24 @@ def extract_stats(driver, link, match_id):
         print(f"Error occurred while scraping stats: {e}")
         pass
 
-    player_rows = []
-    gk_rows = []
-
-    try:
-        utils.js_scroll_by(driver, -3000)
-
-        player_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.mls-o-buttons__segment[value="players"]')))
-        player_btn.click()
-
-
-        players_mod = wait.until(EC.visibility_of_element_located((
-            By.XPATH,
-            '//section[contains(@class,"mls-l-module--match-hub-player-stats") and not(contains(@style,"display: none"))]'
-        )))
-
-        utils.js_scroll_into_view(driver, players_mod)
-
-        club_blocks = players_mod.find_elements(By.CSS_SELECTOR, '.mls-c-stats--match-hub-player-stats')
-
-        for idx, block in enumerate(club_blocks):
-            side = 'home' if idx == 0 else 'away'
-            club_abbrev_el = block.find_elements(By.CSS_SELECTOR, '.mls-c-stats__club-abbreviation')
-            club_abbrev = club_abbrev_el[0].text.strip() if club_abbrev_el else None
-
-            for tbl in block.find_elements(By.CSS_SELECTOR, 'table.mls-o-table'):
-                cls = (tbl.get_attribute('class') or '').lower()
-                is_gk = 'goalkeeper' in cls
-
-                header_cells = tbl.find_elements(
-                    By.CSS_SELECTOR,
-                    'thead .mls-o-table__header-group:not(.mls-o-table__header-group--main) .mls-o-table__header'
-                )
-                if not header_cells:
-                    header_cells = tbl.find_elements(By.CSS_SELECTOR, 'thead .mls-o-table__header')
-
-                headers = [(h.text or h.get_attribute('textContent') or '').strip() for h in header_cells]
-
-                for tr in tbl.find_elements(By.CSS_SELECTOR, 'tbody .mls-o-table__row'):
-                    cells = tr.find_elements(By.CSS_SELECTOR, '.mls-o-table__cell')
-                    values = [(c.text or c.get_attribute('textContent') or '').strip() for c in cells]
-
-                    if len(values) < len(headers):
-                        values += [''] * (len(headers) - len(values))
-                    elif len(values) > len(headers):
-                        values = values[:len(headers)]
-
-                    row = dict(zip(headers, values))
-                    row.update({
-                        'match_id': match_id,
-                        'side': side,
-                        'club': club_abbrev
-                    })
-
-                    if is_gk:
-                        gk_rows.append(row)
-                    else:
-                        player_rows.append(row)
-
-                    combined_rows = player_rows + gk_rows
-
-    except Exception as e:
-        print(f"Error occurred while scraping player stats: {e}")
         
     general_stats_df = pd.DataFrame(general_stats);  general_stats_df["category"] = "general"
     shooting_stats_df = pd.DataFrame(shooting_stats); shooting_stats_df["category"] = "shooting"
     passing_stats_df = pd.DataFrame(passing_stats);   passing_stats_df["category"] = "passing"
     possession_stats_df = pd.DataFrame(possession_stats); possession_stats_df["category"] = "possession"
     expected_goals_stats_df = pd.DataFrame(xg_stats); expected_goals_stats_df["category"] = "xg"
-    player_stats_df = pd.DataFrame(combined_rows)
-
+    
     all_stats = pd.concat(
         [general_stats_df, shooting_stats_df, passing_stats_df, possession_stats_df, expected_goals_stats_df],
         axis=0, ignore_index=True
     )
 
-    player_stats_df['match_id'] = match_id
     all_stats['match_id'] = match_id
-    return all_stats, player_stats_df
+    all_stats['date'] = date
+    all_stats['home_team'] = home_team
+    all_stats['away_team'] = away_team
+    return all_stats
 
-def add_match_id(obj, match_id):
-    if obj is None:
-        return pd.DataFrame({'match_id': [match_id]})
-
-    df = obj.copy() if isinstance(obj, pd.DataFrame) else pd.DataFrame(obj)
-
-    if df.empty:
-        return pd.DataFrame({'match_id': [match_id]})
-
-    if 'match_id' in df.columns:
-        return df
-
-    df.insert(0, 'match_id', match_id)
-    return df
 
 
 def extract_match_data(links, driver):
@@ -428,20 +564,15 @@ def extract_match_data(links, driver):
         raw_id = link.rstrip('/').split('/')[-1].split('?')[0]
         match_id = hashlib.md5(raw_id.encode()).hexdigest()[:8]
 
-        feed = extract_feed(driver, link, match_id)
-        feed = add_match_id(feed, match_id)
+        feed = extract_feed(driver, link, match_id)        
+        team_stats = extract_team_stats(driver, link, match_id)
+        player_stats = extract_player_stats(driver, link, match_id)        
 
-        stats, player_stats = extract_stats(driver, link, match_id)
-        
-        
-        stats = add_match_id(stats, match_id)
-        player_stats = add_match_id(player_stats, match_id)
-
-        latest_stats.append(stats)
+        latest_team_stats.append(team_stats)
         latest_player_stats.append(player_stats)
         latest_feed.append(feed)
 
-    latest_stats_df = pd.concat(latest_stats, axis=0, ignore_index=True) if latest_stats else pd.DataFrame(columns=['match_id'])
+    latest_stats_df = pd.concat(latest_team_stats, axis=0, ignore_index=True) if latest_team_stats else pd.DataFrame(columns=['match_id'])
     latest_player_stats_df = pd.concat(latest_player_stats, axis=0, ignore_index=True) if latest_player_stats else pd.DataFrame(columns=['match_id'])
     latest_feed_df = pd.concat(latest_feed, axis=0, ignore_index=True) if latest_feed else pd.DataFrame(columns=['match_id'])
     

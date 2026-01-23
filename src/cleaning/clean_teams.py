@@ -2,6 +2,35 @@ import pandas as pd
 
 
 def clean_teams(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean and transform raw team data into a standardized format.
+    This function processes a DataFrame containing team information by:
+    - Removing the first and last columns
+    - Renaming columns to standardized names
+    - Parsing team formation into lineup and style components
+    - Cleaning team names by removing "Major League Soccer" text
+    - Converting worth values from Euro format (e.g., "€50M") to numeric
+    - Converting specified columns to numeric types
+    - Setting team_id as the index
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Raw DataFrame containing team data with columns such as Name, ID, 
+        Formation, Overall, Attack, Midfield, Defence, Players, and 
+        Club worth/Club.worth.
+    Returns
+    -------
+    pd.DataFrame
+        Cleaned DataFrame with standardized column names, numeric types where
+        appropriate, parsed formation data, and team_id as the index.
+    Notes
+    -----
+    - The function creates a copy of the input DataFrame to avoid modifying 
+      the original data.
+    - Formation strings are expected to be in the format "lineup style [trash]".
+    - Worth values are expected to be in Euro format with 'M' suffix for millions.
+    - Any conversion errors when casting to numeric types will result in NaN values.
+    """
     df = df.copy()
 
     df = df.iloc[:, 1:-1]

@@ -8,6 +8,25 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 
 ### Function to dismiss cookie popup
 def dismiss_cookies(driver, timeout=8):
+    """
+    Attempts to dismiss cookie consent banners on a web page, specifically targeting OneTrust banners.
+    This function tries multiple strategies to find and click cookie acceptance buttons:
+    1. Direct selector matching for common OneTrust button IDs/classes
+    2. Searching within the OneTrust banner container
+    3. Switching into iframes that might contain consent dialogs
+    4. Using OneTrust's JavaScript API or removing the banner as a last resort
+    Args:
+        driver: Selenium WebDriver instance used to interact with the page
+        timeout (int, optional): Maximum time in seconds to wait for elements. Defaults to 8.
+    Returns:
+        bool: True if a cookie banner was successfully dismissed, False otherwise.
+            Also prints debug information about attempted selectors if unsuccessful.
+    Note:
+        - The function attempts non-intrusive methods first (clicking visible buttons)
+        - Falls back to JavaScript execution for stubborn elements
+        - Handles iframe switching and ensures driver context is restored
+        - Designed to be resilient to various OneTrust implementation patterns
+    """
     wait = WebDriverWait(driver, timeout)
     tried = []
 
@@ -141,9 +160,18 @@ def js_scroll_into_view(driver, el):
         "arguments[0].scrollIntoView({block:'center', inline:'nearest'});", el)
 
     
-def make_match_id(link: str) -> str:
-    mid = link.rstrip("/").split("/")[-1].split("?")[0]
-    return re.sub(r"[^A-Za-z0-9._-]+", "_", mid)
+def make_match_id(link):
+    if (
+        link is None
+        or (isinstance(link, float) and math.isnan(link))
+        or str(link).strip() == ''
+        or str(link).strip().lower() == 'nan'
+    ):
+        return None
+
+    return hashlib.md5(
+        link.rstrip('/').split('/')[-1].split('?')[0].encode('utf-8')
+    ).hexdigest()[:8]
 
 def scrape_cards(group, driver):
     return driver.execute_script("""
