@@ -1,6 +1,97 @@
 import pandas as pd
+import re
 
+clubs = [
+    "Atlanta United",
+    "Austin FC",
+    "CF Montréal",
+    "Charlotte FC",
+    "Chicago Fire FC",
+    "FC Cincinnati",
+    "Colorado Rapids",
+    "Columbus Crew",
+    "D.C. United",
+    "FC Dallas",
+    "Houston Dynamo FC",
+    "Sporting Kansas City",
+    "LA Galaxy",
+    "Los Angeles Football Club",
+    "Inter Miami CF",
+    "Minnesota United FC",
+    "Minnesota United",
+    "Nashville SC",
+    "New England Revolution",
+    "New York City Football Club",
+    "New York City FC",
+    "New York Red Bulls",
+    "Orlando City",
+    "Philadelphia Union",
+    "Portland Timbers",
+    "Real Salt Lake",
+    "San Diego FC",
+    "San Jose Earthquakes",
+    "Seattle Sounders FC",
+    "St. Louis CITY SC",
+    "Toronto FC",
+    "Vancouver Whitecaps FC"
+]
 
+team_map = {
+    "Atlanta United": "ATL",
+    "Austin FC": "ATX",
+    "CF Montréal": "MTL",
+    "Charlotte FC": "CLT",
+    "Chicago Fire FC": "CHI",
+    "FC Cincinnati": "CIN",
+    "Colorado Rapids": "COL",
+    "Columbus Crew": "CLB",
+    "D.C. United": "DC",
+    "FC Dallas": "DAL",
+    "Houston Dynamo FC": "HOU",
+    "Sporting Kansas City": "SKC",
+    "LA Galaxy": "LA",
+    "Los Angeles Football Club": "LAFC",
+    "Inter Miami CF": "MIA",
+    "Minnesota United": "MIN",
+    "Minnesota United FC": "MIN",
+    "Nashville SC": "NSH",
+    "New England Revolution": "NE",
+    "New York City Football Club": "NYC",
+    "New York City FC": "NYC",
+    "New York Red Bulls": "RBNY",
+    "Orlando City": "ORL",
+    "Philadelphia Union": "PHI",
+    "Portland Timbers": "POR",
+    "Real Salt Lake": "RSL",
+    "San Diego FC": "SD",
+    "San Jose Earthquakes": "SJ",
+    "Seattle Sounders FC": "SEA",
+    "St. Louis CITY SC": "STL",
+    "Toronto FC": "TOR",
+    "Vancouver Whitecaps FC": "VAN"
+}
+
+def clean_team_name(s):
+    if s is None:
+        return s
+
+    s = re.sub(r'\bCF\b', '', s)
+    s = re.sub(r'\bFC\b', '', s)
+    s = re.sub(r'\bUnited\b', '', s)
+    s = re.sub(r'\bSC\b', '', s)
+    s = re.sub(r'\bFootball Club\b', '', s)
+    s = re.sub(r'\.', '', s)
+    s = s.strip().lower()
+
+    # collapse extra spaces created by removals
+    s = re.sub(r'\s+', ' ', s)
+
+    return s
+
+team_map_clean = {
+    clean_team_name(k): v
+    for k, v in team_map.items()
+}
 
 def safe_eval(x):
     try:
@@ -92,7 +183,17 @@ def clean_player_stats(df):
             pass 
 
     df.columns = df.columns.str.lower().str.replace(' ', '_')
-
+    
+    df = df.rename(columns={
+    'goals_saved': 'gk_goals_saved',
+    'goals_against': 'gk_goals_against',
+    'expected_goals_against': 'gk_expected_goals_against',
+    'Pass': 'gk_pass'
+    })
+    
+    df = df.drop(columns=['date'])
+    
+    df['team_abbr'] = df['team'].map(team_map_clean)
+   
     return df
 
-ok

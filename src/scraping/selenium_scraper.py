@@ -62,8 +62,6 @@ def extract_match_links(driver, url):
 
         previous_button.click() # Click the button to get to last week's matches
         
-        previous_button.click() # Click again to go further back if needed
-
         time.sleep(5)
         
         matches_table = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'mls-c-schedule__matches')))

@@ -21,6 +21,30 @@ def get_soup(url):
 
 
 def scrape_team_table(soup):
+    """
+    Scrape team information from an HTML table using BeautifulSoup.
+    This function extracts team data from the first table found in the provided
+    BeautifulSoup object, including team details and associated links. It also
+    attempts to extract and format a date from a roster dropdown selector.
+    ! Args:
+        soup (BeautifulSoup): A BeautifulSoup object containing the parsed HTML
+            with a teams table.
+   !  Returns:
+        tuple: A tuple containing:
+            - teams_df (pd.DataFrame): A DataFrame with team information where each
+              row represents a team and columns correspond to table headers. Includes
+              a 'date' column with the roster date or current date.
+            - team_links (list): A list of href URLs extracted from anchor tags within
+              table cells with class 's20'.
+    ! Raises:
+        ValueError: If no table is found in the HTML.
+        ValueError: If no header row is found in the table.
+    ! Notes:
+        - The function looks for a 'select' element with name='roster' to extract
+          the date. If not found, it uses the current date.
+        - Date strings are sanitized by replacing '/' and ':' with '-'.
+        - Only the first table in the soup object is processed.
+    """
     teams_table = soup.find('table')
     if teams_table is None:
         raise ValueError("No table found in the scraped HTML.")
@@ -29,7 +53,6 @@ def scrape_team_table(soup):
     if not rows or not rows[0].find_all('th'):
         raise ValueError("No header row found in the table.")
 
-    ### Convert to DataFrame
     teams_data = []
     headers = [th.get_text(strip=True) for th in rows[0].find_all('th')]
 
@@ -73,27 +96,27 @@ def add_columns_to_url(u: str, cols) -> str:
 
 def extract_players(team_links):
     """
-    Extracts player data from multiple team pages on SoFIFA.
-    This function iterates through a list of team links, scrapes each team's roster page,
-    and extracts player information from the HTML tables. The extracted data is compiled
-    into a pandas DataFrame with additional metadata (team name and date).
-    Args:
-        team_links (list): A list of relative URL paths to team pages on SoFIFA
-                          (e.g., ['/team/123', '/team/456']).
-    Returns:
-        pd.DataFrame: A DataFrame containing player data with columns corresponding to
-                      the table headers from SoFIFA, plus additional columns:
-                      - 'date': The roster date from the page or current date if not found
-                      - 'team': The team name extracted from the page
-    Notes:
-        - Uses helper functions: add_columns_to_url(), get_soup()
-        - Expects a global variable COLS for URL column parameters
-        - Prints warnings if tables or headers are not found for specific URLs
-        - The date is sanitized by replacing "/" and ":" with "-"
-        - All players from all teams are combined into a single DataFrame
-    Raises:
-        May raise exceptions from pandas, requests, or BeautifulSoup operations
-        if network requests fail or HTML parsing encounters unexpected structures.
+    ! Extract player information from a list of team URLs on SoFiFA.
+    ! Args:
+        team_links (list): A list of relative URLs (paths) to team pages on SoFiFA.
+                          Each link should be in the format "/team/XXXXX/team-name".
+    ! Returns:
+        pd.DataFrame: A DataFrame containing player information with the following structure:
+                     - Columns correspond to the headers found in the players table on each team page
+                     - Additional 'date' column: The roster date from the page, or current date if not found
+                     - Additional 'team' column: The team name extracted from the last processed team page
+                       Note: The 'team' column will only reflect the last team processed, which may
+                       cause data inconsistency if multiple teams are scraped.
+    ! Raises:
+        None: Errors are printed to console but do not stop execution.
+              - Missing tables or headers are logged with print statements
+              - Teams without valid data are skipped
+    ! Side Effects:
+        - Makes HTTP requests to SoFiFA website for each team link
+        - Prints warning messages when tables or headers are not found
+    ! Notes:
+        - Depends on helper functions: add_columns_to_url(), get_soup()
+        - Expects global constant: COLS
     """
     all_players = []
 
@@ -105,6 +128,13 @@ def extract_players(team_links):
         soup = get_soup(team_url)
         
         team = soup.find('h1').get_text()
+        
+        date_elem = soup.find('select', {'name': 'roster'})
+        if date_elem:
+            date = date_elem.find('option', selected=True).text.strip()
+            safe_date = date.replace("/", "-").replace(":", "-").strip()
+        else:
+            safe_date = datetime.now().strftime("%Y-%m-%d")
         
         players_table = soup.find('table')
         if players_table is None:
@@ -121,19 +151,10 @@ def extract_players(team_links):
             cols = [td.get_text(strip=True) for td in row.find_all('td')]
             if cols:
                 player_data = dict(zip(headers, cols))
+                player_data['date'] = safe_date
+                player_data['team'] = team
                 all_players.append(player_data)
 
     players_df = pd.DataFrame(all_players)
-
-    date = soup.find('select', {'name': 'roster'})
-    if date:
-        date = date.find('option', selected=True).text.strip()
-        safe_date = date.replace("/", "-").replace(":", "-").strip()
-        players_df['date'] = safe_date
-    else:
-        date = datetime.now().strftime("%Y-%m-%d")
-        players_df['date'] = date
-
-    players_df['team'] = team
 
     return players_df

@@ -82,5 +82,11 @@ def clean_teams(df: pd.DataFrame) -> pd.DataFrame:
 
     if "team_id" in df.columns:
         df = df.set_index("team_id")
-
+    
+    df['date'] = pd.to_datetime(df['date'])
+        
+    df = df.reset_index().set_index('date').sort_index()
+    
+    df = df.rename(columns={'lineup': 'formation_base', 'style': 'formation_style', 'overall_score': 'overall', 'defense': 'defence', 'worth_euro': 'club_worth', 'team_name': 'name', 'num_players': 'players'}) 
+        
     return df

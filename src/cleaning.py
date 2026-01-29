@@ -261,3 +261,9 @@ def hash_match_ids(df: pd.DataFrame, col="match_id", out_col="match_id_hash", le
     df = df.drop(columns=['match_id'], errors='ignore')
     
     return df
+
+def simple_matches(df):
+    df = df.copy()
+    df = df[['match_id', 'home_team', 'away_team', 'date']]
+    df['date'] = pd.to_datetime(df['date']).dt.date
+    return df

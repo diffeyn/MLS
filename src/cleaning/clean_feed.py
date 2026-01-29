@@ -77,8 +77,14 @@ def clean_feed(df):
     
     df['date'] = pd.to_datetime(df['date'], format="%m %d %Y")
     
+    df = df.sort_values(by=['date', 'match_id', 'feed_id'], ascending=[False, True, False]).reset_index(drop=False)
+    
     df = df.drop(columns=['in_player', 'out_player'])
 
     df = df[['match_id', 'date', 'feed_id', 'minute', 'title', 'comment']]
+    
+    df.rename(columns={'minute' : 'event_minute', 'title': 'event_type', 'comment' : 'event_comment', 'feed_id' : 'event_id'}, inplace=True)
+    
+    df = df[['event_id','match_id', 'event_minute', 'event_type', 'event_comment']]
     
     return df

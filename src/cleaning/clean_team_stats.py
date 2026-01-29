@@ -27,26 +27,26 @@ def clean_teams_stats(df):
             - stat: Combined statistic name (e.g., 'possession_0_5')
             - home_value: Home team value for the statistic
             - away_value: Away team value for the statistic
-    """
+    """   
     bar_dict = {
-        '0-5': 'bar_0',
-        '6-10': 'bar_1',
-        '11-15': 'bar_2',
-        '16-20': 'bar_3',
-        '21-25': 'bar_4',
-        '26-30': 'bar_5',
-        '31-35': 'bar_6',
-        '36-40': 'bar_7',
-        '41-45': 'bar_8',
-        '46-50': 'bar_2_0',
-        '51-55': 'bar_2_1',
-        '56-60': 'bar_2_2',
-        '61-65': 'bar_2_3',
-        '66-70': 'bar_2_4',
-        '71-75': 'bar_2_5',
-        '76-80': 'bar_2_6',
-        '81-85': 'bar_2_7',
-        '86-90': 'bar_2_8',
+        '0-5': 'bar_1_0',
+        '6-10': 'bar_1_1',
+        '11-15': 'bar_2_0',
+        '16-20': 'bar_2_1',
+        '21-25': 'bar_2_2',
+        '26-30': 'bar_2_3',
+        '31-35': 'bar_2_4',
+        '36-40': 'bar_2_5',
+        '41-45': 'bar_2_6',
+        '46-50': 'bar_3_0',
+        '51-55': 'bar_3_1',
+        '56-60': 'bar_3_2',
+        '61-65': 'bar_3_3',
+        '66-70': 'bar_3_4',
+        '71-75': 'bar_3_5',
+        '76-80': 'bar_3_6',
+        '81-85': 'bar_3_7',
+        '86-90': 'bar_3_8',
     }
 
     bar_dict_switched = {v: k for k, v in bar_dict.items()}
