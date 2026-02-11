@@ -2,4 +2,11 @@
 *.xlsx
 !data/github_actions/**/*
 !data/github_actions/
-
+data/
+.env
+__pycache__/
+.ipynb_checkpoints/
+!data/github_actions/**/*
+!data/github_actions/
+*.png
+*.drawio

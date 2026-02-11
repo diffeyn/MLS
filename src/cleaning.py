@@ -31,7 +31,7 @@ def clean_players(df):
     if 'match_id' in df.columns:
         df = df[['match_id'] + [c for c in df.columns if c != 'match_id']]
     else:
-        print("No match_id column found. Columns are:", df.columns.tolist())    
+        raise KeyError("Expected 'match_id' column not found in player stats data.")   
     
     return df
 
